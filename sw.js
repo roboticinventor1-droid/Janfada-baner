@@ -1,11 +1,11 @@
-const CACHE_NAME = "ashayer-lorestan-v1";
+const CACHE_NAME = "ashayer-lorestan-v2";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll([
-        "/Janfada-baner/",
-        "/Janfada-baner/index.html"
+        "./",
+        "./index.html"
       ]);
     })
   );
