@@ -5,7 +5,7 @@
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0b6b3a",
-  "orientation": "portrait",
+  "orientation": "any",
   "lang": "fa",
   "icons": [
     {
