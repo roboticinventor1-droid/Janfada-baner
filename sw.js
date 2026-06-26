@@ -1,47 +1,78 @@
-const CACHE_NAME = "ashayer-lorestan-v3";
+const CACHE_NAME = "janfada-v5";
 
+const ASSETS = [
+  "./",
+  "./index.html",
+  "./manifest.json",
+  "./icon-192.png",
+  "./icon-512.png"
+];
+
+// نصب
 self.addEventListener("install", (event) => {
   self.skipWaiting();
 
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll([
-        "/Janfada-baner/",
-        "/Janfada-baner/index.html",
-        "/Janfada-baner/manifest.json",
-        "/Janfada-baner/icon-192.png",
-        "/Janfada-baner/icon-512.png"
-      ]);
+      return cache.addAll(ASSETS).catch((err) => {
+        console.log("Cache addAll failed:", err);
+      });
     })
   );
 });
 
+// فعال‌سازی + حذف کش‌های قدیمی
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
+    caches.keys().then((keys) => {
+      return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
             return caches.delete(key);
           }
         })
-      )
-    )
+      );
+    })
   );
 
   self.clients.claim();
 });
 
+// فچ امن (بدون crash)
 self.addEventListener("fetch", (event) => {
+  const req = event.request;
+
+  // ❌ فقط HTTP/HTTPS
+  if (!req.url.startsWith("http")) return;
+
+  // ❌ جلوگیری از chrome-extension / غیر قابل cache
+  if (
+    req.url.startsWith("chrome-extension") ||
+    req.method !== "GET"
+  ) {
+    return;
+  }
+
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        const clone = response.clone();
+    fetch(req)
+      .then((res) => {
+        // فقط response معتبر cache شود
+        if (!res || res.status !== 200 || res.type !== "basic") {
+          return res;
+        }
+
+        const clone = res.clone();
+
         caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, clone);
+          cache.put(req, clone).catch(() => {});
         });
-        return response;
+
+        return res;
       })
-      .catch(() => caches.match(event.request))
+      .catch(() => {
+        return caches.match(req).then((cached) => {
+          return cached || caches.match("./index.html");
+        });
+      })
   );
 });
