@@ -14,7 +14,10 @@ self.addEventListener("install", (event) => {
 
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS).catch((err) => {
+      // تبدیل آدرس‌ها به Requestهایی که کش مرورگر را دور می‌زنند
+      const requests = ASSETS.map(url => new Request(url, { cache: "reload" }));
+      
+      return cache.addAll(requests).catch((err) => {
         console.log("Cache addAll failed:", err);
       });
     })
